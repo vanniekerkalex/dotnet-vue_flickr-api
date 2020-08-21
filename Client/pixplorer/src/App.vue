@@ -1,30 +1,20 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" style="width: 70px;">
+    <a href="#" @click="loadRandomImages"><img alt="Vue logo" src="./assets/logo.png" style="width: 70px;"></a>
     <h1>P I X P L O R E R</h1>
-    <!-- <input @keyup.enter="tags.length > 0 ? searchImages : loadRandomImages" v-model="tags" /> -->
-    <!-- <input v-on="{ '@keyup.enter': () => tags.length > 0 ? searchImages : loadRandomImages }" v-model="tags" /> -->
     <input @keyup.enter="searchKey" v-model="tags" />
     <button :disabled="tags.length < 1" @click="searchKey">Search</button>
     <br />
     <div class="section-flickr">
-      <ul class="flickr-showcase clearfix">
+			<h3 v-if="errorMsg.length > 0">{{ errorMsg }}</h3>
+      <ul class="flickr-showcase">
         <li v-for="url in urls" :key="url">
           <figure class="flickr-photo">
-            <img :src="url" style="" >
+            <img @click="openImage(url)" :src="url" style="" >
           </figure>
         </li>
       </ul>
     </div>
-    <!-- <div>
-      <ul >
-        <li v-for="url in urls" :key="url">
-          <img
-            :src="url"
-          >
-        </li>
-      </ul>
-    </div> -->
   </div>
 </template>
 
@@ -42,6 +32,7 @@ export default {
 			urls: [],
 			errors: [],
 			tags: "",
+			errorMsg: ""
 		}
 	},
 	created() {
@@ -52,17 +43,17 @@ export default {
 	},
 	methods: {
 		searchKey() {
+			this.urls = "";
 			(this.tags.length > 0) ? this.searchImages() : this.loadRandomImages()
 		},
 		loadRandomImages() {
 			console.log("Getting random images.")
+			this.tags = ""
+			this.errorMsg = ""
 			axios.get(`http://localhost:5000/images`, {
-				headers: {
-					// remove headers
-				}
+				headers: {}
 			})
 				.then(response => {
-					// JSON responses are automatically parsed.
 					var data = response.data
 					this.data = JSON.parse(data.substring(14, data.length - 1))
 					this.photos = this.data.photos["photo"]
@@ -70,12 +61,34 @@ export default {
 				})
 				.catch(e => {
 					this.errors.push(e)
+					this.error()
+				})
+		},
+		searchImages() {
+			console.log("Searching:", this.tags)
+			this.errorMsg = ""
+			axios.post(`http://localhost:5000/images`, {
+				headers: {}
+			}, {
+				params: {
+					tags: this.tags
+				}
+			})
+				.then(response => {
+					var data = response.data
+					this.data = JSON.parse(data.substring(14, data.length - 1))
+					this.photos = this.data.photos["photo"]
+					this.generateImageUrls()
+				})
+				.catch(e => {
+					this.errors.push(e)
+					this.error()
 				})
 		},
 		generateImageUrls() {
 			const urls = []
 			for (const [, photo] of Object.entries(this.photos)) {
-				if (photo['farm'] > 1 && photo['server'] > 1 && photo['id'] > 1) {
+				if (photo['farm'] > 0 && photo['server'] > 0 && photo['id'] > 0) {
 					var url = 'https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.png'
 					url = url.replace(/{farm-id}/, photo['farm'])
 					url = url.replace(/{server-id}/, photo['server'])
@@ -86,27 +99,13 @@ export default {
 			}
 			this.urls = urls
 		},
-		searchImages() {
-			console.log("Searching:", this.tags)
-			axios.post(`http://localhost:5000/images`, {
-				headers: {
-					// remove headers
-				}
-			}, {
-				params: {
-					tags: this.tags
-				}
-			})
-				.then(response => {
-					// JSON responses are automatically parsed.
-					var data = response.data
-					this.data = JSON.parse(data.substring(14, data.length - 1))
-					this.photos = this.data.photos["photo"]
-					this.generateImageUrls()
-				})
-				.catch(e => {
-					this.errors.push(e)
-				})
+		openImage(url) {
+			window.open(url, "_blank")
+		},
+		error() {
+			this.urls = ""
+			this.errorMsg = "Sorry, there is an error!"
+			console.log(this.errorMsg)
 		}
 	},
 }
@@ -130,24 +129,7 @@ ul {
 
 li {
 	display: inline-block;
-	/* margin: 0 10px; */
 }
-
-/* .section-flickr {
-	text-align: center;
-	padding: 0;
-} */
-
-/* .flickr-showcase {
-	list-style: none;
-	width: 100%;
-} */
-
-/* .flickr-showcase li {
-	display: block;
-	float: left;
-	width: 25%;
-} */
 
 .flickr-photo {
 	transform: scale(0.9);
@@ -160,12 +142,10 @@ li {
 
 .flickr-photo img {
 	opacity: 0.7;
-	/* width: 100%; */
 	width: 300px;
 	height: auto;
 	transform: scale(1.05);
 	transition: transform 0.5s, opacity 0.5s;
-	/* width: 300px; */
 }
 
 .flickr-photo img:hover {
