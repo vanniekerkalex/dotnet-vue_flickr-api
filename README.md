@@ -4,11 +4,17 @@ Proxy API in .NET Core that allows you to view / search images in VUE frontend w
 ## Installation / Run
 
 ### Backend
-In the root folder run: 
+
+#### Make sure .NET Core has been installed: https://dotnet.microsoft.com/download
+
+Go to the root folder of this project after cloning the repository and run: 
 
 `dotnet run`
 
 ### Frontend
+
+#### Make sure you have NodeJS and NPM installed: https://nodejs.org/en/
+
 In `ROOT/Client/pixplorer` run:
 
 `npm install`
