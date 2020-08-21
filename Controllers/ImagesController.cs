@@ -20,16 +20,15 @@ namespace planday.Controllers
     }
 
     [HttpGet]
-    public IActionResult Get()
+    public IActionResult Get(string tags = "")
     {
-
-      return Ok(_imagesService.GetImages().Result);
+      return Ok(_imagesService.Search(tags).Result);
     }
 
     [HttpPost]
     public IActionResult Post(string tags = "")
     {
-      return Ok(_imagesService.SearchImages(tags).Result);
+      return Ok(_imagesService.Search(tags).Result);
     }
 
   }

@@ -16,6 +16,8 @@ namespace planday
 {
   public class Startup
   {
+
+    readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
     public Startup(IConfiguration configuration)
     {
       Configuration = configuration;
@@ -29,6 +31,14 @@ namespace planday
       services.AddControllers();
       services.AddScoped<ImagesService>();
       services.AddControllers().AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+      services.AddCors(options =>
+        {
+          options.AddPolicy(name: MyAllowSpecificOrigins,
+                            builder =>
+                            {
+                              builder.WithOrigins("*").AllowAnyHeader();
+                            });
+        });
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +53,7 @@ namespace planday
 
       app.UseRouting();
 
+      app.UseCors(MyAllowSpecificOrigins);
       app.UseAuthorization();
 
       app.UseEndpoints(endpoints =>
